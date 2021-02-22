@@ -1,0 +1,121 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    node_exporter_version: 0.15.2
+  tasks:
+
+    - name: test connection
+      ping:
+    - name: create group
+      group:
+        name: prometheus
+        state: present
+    - name: create user
+      user:
+        name: prometheus
+        group: prometheus
+        createhome: no
+        system: yes
+        state: present
+    - name: create opt directory for prometheus 
+      file: 
+        path: /opt/prometheus 
+        state: directory
+    - name: download node exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+        dest: /opt/prometheus
+    - name: unarchive node exporter
+      unarchive:
+        src: yes
+        src: /opt/prometheus/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+        dest: /opt/prometheus
+    - name: create symlink to node exporter
+      file:
+        src: yes
+        path: /usr/bin/node_exporter
+        state: link
+        src: /opt/prometheus/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter
+    - name: install unit file to systemd
+      template:
+        src: no
+        src: /home/ubuntu/opera/xopera-opera/examples/nginx_openstack/webApp-loadbalancer-node_exporter-TOSCA/playbooks/node_exporter/node_exporter.service
+        dest: /etc/systemd/system/node_exporter.service
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: node_exporter.service
+
+
+    - name: create group
+      group:
+        name: consul
+        state: present
+
+    - name: create user for consul
+      user:
+        name: consul
+        group: consul
+        createhome: no
+        system: yes
+        state: present
+
+    - name: Create opt directory for Consul
+      file:
+        path: /opt/consul
+        state: directory
+
+    - name: download Consul for linux
+      get_url:
+        url: https://releases.hashicorp.com/consul/1.8.5/consul_1.8.5_linux_amd64.zip
+        dest: /opt/consul
+
+    - name: Install unzip
+      package:
+        name: unzip
+        state: installed
+
+    - name: unarchive consul
+      unarchive:
+        remote_src: yes
+        src: /opt/consul/consul_1.8.5_linux_amd64.zip
+        dest: /opt/consul
+
+    - name: Create config directory for Consul
+      file:
+        path: /etc/consul.d
+        state: directory
+
+    - name: Export the service file to /etc/consul.d
+      template:
+        src: no
+        src: /home/ubuntu/opera/xopera-opera/examples/nginx_openstack/webApp-loadbalancer-node_exporter-TOSCA/demo-scaling/playbooks/node_exporter/node-exporter.json
+        dest: /etc/consul.d/node-exporter.json
+
+
+    - name: create symlink to consul
+      file:
+        remote_src: yes
+        path: /usr/bin/consul
+        state: link
+        src: /opt/consul/consul
+
+    - name: install unit file to systemd for consul
+      template:
+        src: no
+        src: /home/ubuntu/opera/xopera-opera/examples/nginx_openstack/webApp-loadbalancer-node_exporter-TOSCA/demo-scaling/playbooks/node_exporter/consul.service
+        dest: /etc/systemd/system/consul.service
+
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: consul.service
+
+    - name: Join the agents
+      shell : consul join 172.17.66.41
+

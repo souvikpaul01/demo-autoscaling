@@ -1,0 +1,9 @@
+{
+  "service": {
+    "name": "node_exporter",
+    "tags": [
+      "rails"
+    ],
+    "port": 9100
+  }
+}

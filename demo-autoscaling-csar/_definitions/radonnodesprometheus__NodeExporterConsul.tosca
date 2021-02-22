@@ -1,0 +1,54 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - file: radonartifacts__Ansible.tosca
+    namespace_uri: radon.artifacts
+    namespace_prefix: radonartifacts
+node_types:
+  radon.nodes.prometheus.NodeExporterConsul:
+    derived_from: tosca.nodes.SoftwareComponent
+    metadata:
+      targetNamespace: "radon.nodes.prometheus"
+      abstract: "false"
+      final: "false"
+    requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          relationship: tosca.relationships.HostedOn
+          occurrences: [ 1, UNBOUNDED ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            description: The standard create operation
+            inputs:
+              jsonFileConsul:
+                type: string
+                required: true
+                default: "node-exporter.json"
+              serviceFileNodeexporter:
+                type: string
+                required: true
+                default: "node_exporter.service"
+              serviceFileConsul:
+                type: string
+                required: true
+                default: "consul.service"
+            implementation:
+              primary: /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/create/node_exporter.yml
+              dependencies: [ /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/jsonFIleConsul/node-exporter.json, /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/serviceFileNodeexporter/node_exporter.service, /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/serviceFileConsul/consul.service ]
+              timeout: 0
+    artifacts:
+      jsonFIleConsul:
+        type: tosca.artifacts.File
+        file: /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/jsonFIleConsul/node-exporter.json
+      serviceFileNodeexporter:
+        type: tosca.artifacts.File
+        file: /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/serviceFileNodeexporter/node_exporter.service
+      create:
+        type: radon.artifacts.Ansible
+        file: /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/create/node_exporter.yml
+      serviceFileConsul:
+        type: tosca.artifacts.File
+        file: /nodetypes/radon.nodes.prometheus/NodeExporterConsul/files/serviceFileConsul/consul.service

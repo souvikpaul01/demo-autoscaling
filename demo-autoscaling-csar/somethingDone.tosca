@@ -1,0 +1,167 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+metadata:
+  targetNamespace: example.org.tosca.servicetemplates
+  name: testLbNginx
+imports:
+- file: radonnodesVM__OpenStack.tosca
+  namespace_uri: radon.nodes.VM
+  namespace_prefix: radonnodesVM
+- file: radonnodesLoadBalancer__nginxLB.tosca
+  namespace_uri: radon.nodes.LoadBalancer
+  namespace_prefix: radonnodesLoadBalancer
+- file: radonnodesnginx__NginxHtmlSite.tosca
+  namespace_uri: radon.nodes.nginx
+  namespace_prefix: radonnodesnginx
+- file: radonnodesprometheus__NodeExporterConsul.tosca
+  namespace_uri: radon.nodes.prometheus
+  namespace_prefix: radonnodesprometheus
+- file: radonnodesnginx__nginxAppServer.tosca
+  namespace_uri: radon.nodes.nginx
+  namespace_prefix: radonnodesnginx
+- file: radonrelationshipsnginx__AddServerToLB.tosca
+  namespace_uri: radon.relationships.nginx
+  namespace_prefix: radonrelationshipsnginx
+- file: radonrelationshipsprometheus__NginxSiteHosting.tosca
+  namespace_uri: radon.relationships.prometheus
+  namespace_prefix: radonrelationshipsprometheus
+topology_template:
+  node_templates:
+    NginxHtmlSite_0_s_2:
+      type: radon.nodes.nginx.NginxHtmlSite
+      metadata:
+        x: '621'
+        y: '133'
+        displayName: NginxHtmlSite
+      properties:
+        hostname: IP of the remote database
+      requirements:
+      - host:
+          node: nginxAppServer_0_s_2
+          relationship: con_NginxSiteHosting_0
+          capability: host
+    nginxAppServer_0_s_2:
+      type: radon.nodes.nginx.nginxAppServer
+      metadata:
+        x: '625'
+        y: '447'
+        displayName: nginxAppServer
+      requirements:
+      - connectToLB:
+          node: nginxLB_0
+          relationship: con_AddServerToLB_0
+          capability: connectToLB
+      - host:
+          node: OpenStack_1_s_2
+          relationship: con_HostedOn_1
+          capability: host
+    OpenStack_1_s_2:
+      type: radon.nodes.VM.OpenStack
+      metadata:
+        x: '628'
+        y: '664'
+        displayName: OpenStack
+      properties:
+        flavor: m2.xsmall
+        key_name: key_paul
+        image: centos7
+        ssh_username: centos
+        name: nginxRadon_server_s_2
+        network: provider_64_net
+    NodeExporterConsul_0_s_2:
+      type: radon.nodes.prometheus.NodeExporterConsul
+      metadata:
+        x: '992'
+        y: '655'
+        displayName: NodeExporterConsul
+      requirements:
+      - host:
+          node: OpenStack_1_s_2
+          relationship: con_HostedOn_2
+          capability: host
+    OpenStack_1:
+      type: radon.nodes.VM.OpenStack
+      metadata:
+        x: '628'
+        y: '664'
+        displayName: OpenStack
+      properties:
+        flavor: m2.xsmall
+        key_name: key_paul
+        image: centos7
+        ssh_username: centos
+        name: nginxRadon_server
+        network: provider_64_net
+    nginxLB_0:
+      type: radon.nodes.LoadBalancer.nginxLB
+      metadata:
+        x: '240'
+        y: '483'
+        displayName: nginxLB
+      requirements:
+      - host:
+          node: OpenStack_0
+          relationship: con_HostedOn_0
+          capability: host
+    NginxHtmlSite_0:
+      type: radon.nodes.nginx.NginxHtmlSite
+      metadata:
+        x: '621'
+        y: '133'
+        displayName: NginxHtmlSite
+      properties:
+        hostname: IP of the remote database
+      requirements:
+      - host:
+          node: nginxAppServer_0
+          relationship: con_NginxSiteHosting_0
+          capability: host
+    NodeExporterConsul_0:
+      type: radon.nodes.prometheus.NodeExporterConsul
+      metadata:
+        x: '992'
+        y: '655'
+        displayName: NodeExporterConsul
+      requirements:
+      - host:
+          node: OpenStack_1
+          relationship: con_HostedOn_2
+          capability: host
+    nginxAppServer_0:
+      type: radon.nodes.nginx.nginxAppServer
+      metadata:
+        x: '625'
+        y: '447'
+        displayName: nginxAppServer
+      requirements:
+      - connectToLB:
+          node: nginxLB_0
+          relationship: con_AddServerToLB_0
+          capability: connectToLB
+      - host:
+          node: OpenStack_1
+          relationship: con_HostedOn_1
+          capability: host
+    OpenStack_0:
+      type: radon.nodes.VM.OpenStack
+      metadata:
+        x: '233'
+        y: '686'
+        displayName: OpenStack
+      properties:
+        flavor: m2.xsmall
+        key_name: key_paul
+        image: centos7
+        ssh_username: centos
+        name: nginxRadon_LB
+        network: provider_64_net
+  relationship_templates:
+    con_HostedOn_2:
+      type: tosca.relationships.HostedOn
+    con_HostedOn_0:
+      type: tosca.relationships.HostedOn
+    con_HostedOn_1:
+      type: tosca.relationships.HostedOn
+    con_AddServerToLB_0:
+      type: radon.relationships.nginx.AddServerToLB
+    con_NginxSiteHosting_0:
+      type: radon.relationships.prometheus.NginxSiteHosting

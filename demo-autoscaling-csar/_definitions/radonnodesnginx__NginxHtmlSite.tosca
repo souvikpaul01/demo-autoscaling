@@ -1,0 +1,54 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - file: radonartifacts__Ansible.tosca
+    namespace_uri: radon.artifacts
+    namespace_prefix: radonartifacts
+  - file: radonrelationshipsprometheus__NginxSiteHosting.tosca
+    namespace_uri: radon.relationships.prometheus
+    namespace_prefix: radonrelationshipsprometheus
+node_types:
+  radon.nodes.nginx.NginxHtmlSite:
+    derived_from: tosca.nodes.SoftwareComponent
+    metadata:
+      targetNamespace: "radon.nodes.nginx"
+      abstract: "false"
+      final: "false"
+    properties:
+      hostname:
+        type: string
+        required: false
+        default: "IP of the remote database"
+    requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          relationship: radon.relationships.prometheus.NginxSiteHosting
+          occurrences: [ 1, UNBOUNDED ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            description: The standard create operation
+            inputs:
+              hostname:
+                type: string
+                required: true
+                default: { get_property: [ SELF, hostname ] }
+            implementation:
+              primary: /nodetypes/radon.nodes.nginx/NginxHtmlSite/files/create/create.yml
+              timeout: 0
+          delete:
+            description: The standard delete operation
+            implementation:
+              primary: /nodetypes/radon.nodes.nginx/NginxHtmlSite/files/delete/delete.yml
+              timeout: 0
+    artifacts:
+      create:
+        type: radon.artifacts.Ansible
+        description: Anisble to create site
+        file: /nodetypes/radon.nodes.nginx/NginxHtmlSite/files/create/create.yml
+      delete:
+        type: radon.artifacts.Ansible
+        description: Ansible to delete site
+        file: /nodetypes/radon.nodes.nginx/NginxHtmlSite/files/delete/delete.yml

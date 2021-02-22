@@ -1,0 +1,18 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+relationship_types:
+  radon.relationships.prometheus.NginxSiteHosting:
+    derived_from: tosca.relationships.HostedOn
+    metadata:
+      targetNamespace: "radon.relationships.prometheus"
+      abstract: "false"
+      final: "false"
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        operations:
+          post_configure_source:
+            description: The standard post_configure_source operation
+            implementation:
+              primary: /relationshiptypes/radon.relationships.prometheus/NginxSiteHosting/files/reload.yml
+              timeout: 0

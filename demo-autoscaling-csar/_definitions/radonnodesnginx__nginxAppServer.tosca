@@ -1,0 +1,65 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - file: radonartifacts__Ansible.tosca
+    namespace_uri: radon.artifacts
+    namespace_prefix: radonartifacts
+  - file: radonrelationshipsnginx__AddServerToLB.tosca
+    namespace_uri: radon.relationships.nginx
+    namespace_prefix: radonrelationshipsnginx
+  - file: radonnodesnginx__NginxHtmlSite.tosca
+    namespace_uri: radon.nodes.nginx
+    namespace_prefix: radonnodesnginx
+node_types:
+  radon.nodes.nginx.nginxAppServer:
+    derived_from: tosca.nodes.SoftwareComponent
+    metadata:
+      targetNamespace: "radon.nodes.nginx"
+      abstract: "false"
+      final: "false"
+    attributes:
+      site_config_dir:
+        type: string
+        default: "/etc/nginx/conf.d"
+    requirements:
+      - connectToLB:
+          capability: tosca.capabilities.Endpoint
+          node: radon.nodes.LoadBalancer.nginxLB
+          relationship: radon.relationships.nginx.AddServerToLB
+          occurrences: [ 1, UNBOUNDED ]
+    capabilities:
+      host:
+        occurrences: [ 1, UNBOUNDED ]
+        valid_source_types: [ radon.nodes.nginx.NginxHtmlSite ]
+        type: tosca.capabilities.Compute
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              configurationFileNginx:
+                type: string
+                required: true
+                default: "nginx.conf"
+            implementation:
+              primary: /nodetypes/radon.nodes.nginx/nginxAppServer/files/create/install.yml
+              dependencies: [ /nodetypes/radon.nodes.nginx/nginxAppServer/files/configurationFIleNginx/nginx.conf ]
+              timeout: 0
+          delete:
+            description: The standard delete operation
+            implementation:
+              primary: /nodetypes/radon.nodes.nginx/nginxAppServer/files/delete/uninstall.yml
+              timeout: 0
+    artifacts:
+      create:
+        type: radon.artifacts.Ansible
+        description: Ansible to install nginx
+        file: /nodetypes/radon.nodes.nginx/nginxAppServer/files/create/install.yml
+      configurationFIleNginx:
+        type: tosca.artifacts.File
+        file: /nodetypes/radon.nodes.nginx/nginxAppServer/files/configurationFIleNginx/nginx.conf
+      delete:
+        type: radon.artifacts.Ansible
+        description: ansible to delete nginx
+        file: /nodetypes/radon.nodes.nginx/nginxAppServer/files/delete/uninstall.yml

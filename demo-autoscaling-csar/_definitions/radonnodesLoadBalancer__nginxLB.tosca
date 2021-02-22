@@ -1,0 +1,64 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - file: radonartifacts__Ansible.tosca
+    namespace_uri: radon.artifacts
+    namespace_prefix: radonartifacts
+  - file: radonnodesnginx__nginxAppServer.tosca
+    namespace_uri: radon.nodes.nginx
+    namespace_prefix: radonnodesnginx
+node_types:
+  radon.nodes.LoadBalancer.nginxLB:
+    derived_from: tosca.nodes.SoftwareComponent
+    metadata:
+      targetNamespace: "radon.nodes.LoadBalancer"
+      abstract: "false"
+      final: "false"
+    attributes:
+      site_config_dir:
+        type: string
+        default: "/etc/nginx/conf.d"
+    capabilities:
+      connectToLB:
+        occurrences: [ 1, UNBOUNDED ]
+        valid_source_types: [ radon.nodes.nginx.nginxAppServer ]
+        type: tosca.capabilities.Endpoint
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            description: The standard create operation
+            implementation:
+              primary: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/create/install.yml
+              dependencies: [ /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/configurationFile/nginx.conf ]
+              timeout: 0
+          configure:
+            inputs:
+              configurationFile:
+                type: string
+                required: true
+                default: "nginx.conf"
+            implementation:
+              primary: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/configure/configure.yml
+              dependencies: [ /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/configurationFile/nginx.conf ]
+              timeout: 0
+          delete:
+            description: The standard delete operation
+            implementation:
+              primary: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/delete/uninstall.yml
+              timeout: 0
+    artifacts:
+      configurationFile:
+        type: tosca.artifacts.File
+        file: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/configurationFile/nginx.conf
+      create:
+        type: radon.artifacts.Ansible
+        file: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/create/install.yml
+      configure:
+        type: radon.artifacts.Ansible
+        description: Ansible to configure LB
+        file: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/configure/configure.yml
+      delete:
+        type: radon.artifacts.Ansible
+        file: /nodetypes/radon.nodes.LoadBalancer/nginxLB/files/delete/uninstall.yml

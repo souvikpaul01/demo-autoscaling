@@ -1,0 +1,24 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+relationship_types:
+  radon.relationships.nginx.AddServerToLB:
+    derived_from: tosca.relationships.ConnectsTo
+    metadata:
+      targetNamespace: "radon.relationships.nginx"
+      abstract: "false"
+      final: "false"
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        operations:
+          post_configure_target:
+            description: The standard post_configure_target operation
+            inputs:
+              WebApp_end_points_IP:
+                type: string
+                description: the IP of the application server
+                required: false
+                default: { get_attribute: [ SOURCE, host, public_address ] }
+            implementation:
+              primary: /relationshiptypes/radon.relationships.nginx/AddServerToLB/files/add_webApp.yml
+              timeout: 0

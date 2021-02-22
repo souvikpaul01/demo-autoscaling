@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: upload the nginx-lb config file
+      copy:
+        src: /home/ubuntu/opera/xopera-opera/examples/nginx_openstack/webApp-loadbalancer-node_exporter-TOSCA/playbooks/lb/nginx.conf
+
+        dest: /etc/nginx/nginx.conf
+
+    - name: Start nginx
+      service:
+        name: nginx
+        enabled: yes
+        state: started
+
+    - name: Set attributes
+      set_stats:
+        data:
+          site_config_dir: /etc/nginx/conf.d
